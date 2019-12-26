@@ -3,7 +3,7 @@ import React from 'react'
 const Filter = ({ handleFilterInputChange }) => {
   return (
     <p>
-      Find contact
+      Find contact &nbsp;
       <input
         onChange={handleFilterInputChange}
       />

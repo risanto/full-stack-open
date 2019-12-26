@@ -9,13 +9,13 @@ const AddContact = ({
       <h1>Add new contact</h1>
       <form onSubmit={addNewContact}>
       <div>
-        name: 
+        name: &nbsp;
         <input 
           value={newName} onChange={handleNameInputChange}
         />
       </div>
       <div>
-        number: 
+        number: &nbsp;
         <input 
           value={newNumber} onChange={handleNumberInputChange}
         />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from './configs/axios'
+import PersonService from './services/PersonService'
 
 import Filter from './components/Filter'
 import AddContact from './components/AddContact'
@@ -7,21 +7,24 @@ import Persons from './components/Persons'
 
 const App = () => {
   let [persons, setPersons] = useState([])
-
-  useEffect(() => {
-    axios
-      .get('/persons')
-      .then(({ data }) => {
-        setPersons(persons = data)
-      })
-      .catch(err => console.log('err fetching persons', err))
-  }, [])
-
   let [filtered, setFiltered] = useState([])
 
-  const [newName, setNewName] = useState('')
-  const [newNumber, setNewNumber] = useState('')
-  const [newFilter, setNewFilter] = useState('')
+  let [newName, setNewName] = useState('')
+  let [newNumber, setNewNumber] = useState('')
+  let [newFilter, setNewFilter] = useState('')
+
+  const fetchAllContacts = () => {
+    PersonService
+      .fetchAll()
+      .then(persons => {
+        setPersons(persons)
+      })
+      .catch(err => console.log('err fetching persons', err))
+  }
+
+  useEffect(() => {
+    fetchAllContacts()
+  }, [])
 
   const handleNameInputChange = (event) => {
     setNewName(event.target.value)
@@ -40,8 +43,8 @@ const App = () => {
 
     for (let person of persons) {
       if (
-        person.name.toLowerCase()  
-        .includes(event.target.value.toLowerCase())
+        person.name.toLowerCase()
+          .includes(event.target.value.toLowerCase())
       ) {
         currentFilter.push(person)
       }
@@ -52,19 +55,55 @@ const App = () => {
   const addNewContact = (event) => {
 
     event.preventDefault()
+    const newContact = { name: newName, number: newNumber }
 
     for (let person of persons) {
-      if (person.name === newName) {
-        window.alert(`${newName} is already added to phonebook`)
+      if (person.name.toLowerCase() === newName.toLowerCase()) {
+        if (
+          window.confirm(
+            `${newName} is already added to phonebook, replace the old number with a new one?`
+          )
+        ) {
+          PersonService
+            .update(person.id, newContact)
+            .then(returnedData => {
+              setPersons(persons.map(personUpdate =>
+                personUpdate.id !== person.id ? personUpdate : returnedData
+              ))
+              setNewName('')
+              setNewNumber('')
+              fetchAllContacts()
+            })
+        }
         return
       }
     }
 
-    setPersons(persons.concat([
-      { name: newName, number: newNumber }
-    ]))
+    PersonService
+      .add(newContact)
+      .then(data => {
+        setPersons(persons.concat([data]))
+      })
+      .catch(err =>
+        console.log('err while adding new contact', err)
+      )
 
     setNewName('')
+    setNewNumber('')
+  }
+
+  const removePerson = (person) => {
+
+    if (window.confirm(`Delete ${person.name}?`)) {
+      PersonService
+        .remove(person.id)
+        .then(_ => {
+          fetchAllContacts()
+        })
+        .catch(err =>
+          console.log('err while removing a contact', err)
+        )
+    }
   }
 
   return (
@@ -79,7 +118,10 @@ const App = () => {
         handleNameInputChange={handleNameInputChange}
         handleNumberInputChange={handleNumberInputChange}
       />
-      <Persons persons={newFilter ? filtered : persons} />
+      <Persons
+        persons={newFilter ? filtered : persons}
+        removePerson={removePerson}
+      />
     </div>
   )
 }
