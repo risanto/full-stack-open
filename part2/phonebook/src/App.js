@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import PersonService from './services/PersonService'
 
+import Notification from './components/Notification'
 import Filter from './components/Filter'
 import AddContact from './components/AddContact'
 import Persons from './components/Persons'
@@ -8,6 +9,7 @@ import Persons from './components/Persons'
 const App = () => {
   let [persons, setPersons] = useState([])
   let [filtered, setFiltered] = useState([])
+  let [message, setMessage] = useState({})
 
   let [newName, setNewName] = useState('')
   let [newNumber, setNewNumber] = useState('')
@@ -52,6 +54,13 @@ const App = () => {
     setFiltered(filtered.concat(currentFilter))
   }
 
+  const displayNotifMessage = (type, content) => {
+    setMessage({ type, content })
+    setTimeout(() => {
+      setMessage({})
+    }, 5000)
+  }
+
   const addNewContact = (event) => {
 
     event.preventDefault()
@@ -68,11 +77,20 @@ const App = () => {
             .update(person.id, newContact)
             .then(returnedData => {
               setPersons(persons.map(personUpdate =>
-                personUpdate.id !== person.id ? personUpdate : returnedData
+                personUpdate.id !== person.id
+                  ? personUpdate : returnedData
               ))
+              displayNotifMessage(
+                'success', `Added ${person.name} to your phonebook`
+              )
               setNewName('')
               setNewNumber('')
               fetchAllContacts()
+            })
+            .catch(err => {
+              displayNotifMessage(
+                'error', `${person.name} was already removed from your phonebook`
+              )
             })
         }
         return
@@ -82,7 +100,11 @@ const App = () => {
     PersonService
       .add(newContact)
       .then(data => {
+        displayNotifMessage(
+          'success', `Added ${newContact.name} to your phonebook`
+        )
         setPersons(persons.concat([data]))
+        fetchAllContacts()
       })
       .catch(err =>
         console.log('err while adding new contact', err)
@@ -109,6 +131,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} />
       <Filter
         handleFilterInputChange={handleFilterInputChange}
       />

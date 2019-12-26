@@ -11,3 +11,21 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.message-success {
+  background: rgb(245, 245, 245);
+  font-size: 20px;
+  border: 5px solid rgb(3, 207, 3);
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.message-error {
+  background: rgb(245, 245, 245);
+  font-size: 20px;
+  border: 5px solid rgb(241, 70, 70);
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
