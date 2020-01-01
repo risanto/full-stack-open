@@ -7,12 +7,17 @@ const { listOfBlogs } = require('../utils/list_helper')
 
 const api = supertest(app)
 
+let initialBlogs
+
 beforeEach(async () => {
+
   await Blog.deleteMany({})
 
   const blogObjects = listOfBlogs.map(blog => new Blog(blog))
   const promiseArr = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArr)
+  const blogs = await Promise.all(promiseArr)
+
+  initialBlogs = blogs
 })
 
 describe('GET /api/blogs', () => {
@@ -78,7 +83,8 @@ describe('GET /api/blogs', () => {
 })
 
 describe('POST /api/blogs', () => {
-  test('should successfully add the blog to database', async () => {
+  test('succeeds with a valid input', async () => {
+
     const input = {
       title: "Mark Manson",
       author: "Mark Manson",
@@ -101,6 +107,7 @@ describe('POST /api/blogs', () => {
   })
 
   test('when the likes property is missing from the request data, it will default to 0', async () => {
+
     const input = {
       title: "Mark Manson",
       author: "Mark Manson",
@@ -116,6 +123,7 @@ describe('POST /api/blogs', () => {
   })
 
   test('should return status code 400 when the title and url properties are missing from the request data', async () => {
+
     const input = {
       author: "Mark Manson",
     }
@@ -124,8 +132,48 @@ describe('POST /api/blogs', () => {
 
     expect(response.status).toBe(400)
     expect(typeof response.body).toBe('object')
+
+    expect(response.body.error).toBeDefined()
+  })
+})
+
+describe('DELETE /api/blogs/:id', () => {
+  test('succeeds with a valid id', async () => {
+    const response = await api
+      .delete('/api/blogs/' + initialBlogs[0].id)
+
+    expect(response.status).toBe(200)
+    expect(typeof response.body).toBe('object')
+
+    expect(response.body.message).toBeDefined()
+    expect(response.body.deleted).toBeDefined()
+
+    const deletedBlog = await Blog.findById(initialBlogs[0].id)
+    expect(deletedBlog).toBe(null)
+  })
+})
+
+describe('PUT /api/blogs/:id', () => {
+  test.only('succeeds with a valid id', async () => {
+    const input = {
+      title: "Mark Manson",
+      author: "Mark Manson",
+      url: "https://markmanson.net/",
+      likes: 9
+    }
+
+    const response = await api
+      .put('/api/blogs/' + initialBlogs[0].id)
+      .send(input)
     
-    expect(response.body.error).toBeDefined()  
+    expect(response.status).toBe(200)
+    expect(typeof response.body).toBe('object')
+
+    expect(response.body.message).toBeDefined()
+    expect(response.body.updated).toBeDefined()
+    
+    const updatedBlog = await Blog.findById(initialBlogs[0].id)
+    expect(updatedBlog).toMatchObject(input)
   })
 })
 

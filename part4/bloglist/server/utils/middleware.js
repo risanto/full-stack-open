@@ -1,6 +1,6 @@
 const errorHandler = (err, req, res, next) => {
   console.error(err.message)
-  let errStatus = 500
+  let errStatus = err.status || 500
   let error = err.message
 
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
